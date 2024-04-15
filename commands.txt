@@ -1,0 +1,45 @@
+v4l2-ctl --list-devices                     # List all connected cameras
+v4l2-ctl --list-formats-ext                 # List all possible capture resolutions/FPS
+v4l2-ctl -L                                 # List all camera controls (brightness, contrast, etc.)
+v4l2-ctl -c exposure_time_absolute=380      # Set a camera control
+
+arecord -l                                  # List all connected mics
+
+ffmpeg -f v4l2 -i /dev/video0 out.mp4       # Capture video from camera, write to file
+ffmpeg -f alsa -i hw:0,0                    # Capture audio from mic, write to file
+
+# Full capture command (from supercam-lite.py)
+ffmpeg -f v4l2 -thread_queue 1024 -input_format mjpeg -s 600x480 -i /dev/video0
+       -vf drawtext="fontfile=FreeSans.ttf:fontsize=12:fontcolor=white:x=2:y=2:shadowcolor=black:shadowx=1:shadowy=1:text='%{localtime\:%a, %b %e, %Y %-I\\\:%M\\\:%S %p}'"
+       -pix_fmt yuv420p -c:v h264_v4l2m2m -flags global_header -b:v 1800k -y -hide_banner
+       -f segment -segment_format_options movflags=+faststart -segment_time 3600 -segment_atclocktime 1 -reset_timestamps 1 -strftime 1 ./cam1/cam1_%Y-%m-%d_%H-%M-%S.mp4
+
+# Breakdown of above
+ffmpeg
+    -f v4l2                                                     # Use Video4Linux as input format
+    -thread_queue 1024                                          # Set thread count to arbitrary high number to prevent warning message
+    -input_format mjpeg                                         # Can be raw, mjpeg, etc., depending on what camera supports
+    -s 600x480                                                  # Capture resolution
+    -i /dev/video0                                              # Capture device 
+    -vf drawtext="fontfile=FreeSans.ttf:                        # Video filter for in-video timestamp overlay (colon separator)
+        fontsize=12:                                            # Size of timestamp
+        fontcolor=white:                                        # Color of timestamp
+        x=2:                                                    # Position of timestamp
+        y=2:                                                    # "
+        shadowcolor=black:                                      # Add contrasting shadow to improve visibility
+        shadowx=1:                                              # Shadow position relative to base text
+        shadowy=1:                                              # "
+        text='%{localtime\:%a, %b %e, %Y %-I\\\:%M\\\:%S %p}'"  # Template string for timestamp (%a, %b, etc. are replaced by day, month, etc.)
+    -pix_fmt yuv420p                                            # Format of output, used by mp4 encoder (h264) (See Y'UV and Chroma subsampling on Wikipedia)
+    -c:v h264_v4l2m2m                                           # Specifies which encoder to use (h264_v4l2m2m is hardware accelerated, supports mp4 format, available on most systems)
+    -flags global_header                                        # Forgot what this does
+    -b:v 1800k                                                  # Bitrate of output video
+    -y                                                          # Automatically says "yes" to overriding existing file
+    -hide_banner                                                # Hides the loong version and configuration info
+    -f segment                                                  # Use "segment" as output format (aka mixer?), automatically splits feed into fixed length videos
+    -segment_format_options movflags=+faststart                 # faststart puts moov atom at start of file, allows incomplete file to be played, helps with streaming or if write is interrupted
+    -segment_time 3600                                          # Length of segment, in seconds
+    -segment_atclocktime 1                                      # Segments are split on the hour, rather than arbitrary times (this is inaccurate ~10 secs)
+    -reset_timestamps 1                                         # Each segment will start at 00:00, otherwise playback is weird in vlc
+    -strftime 1                                                 # Output file will be read as template string, %Y, %m, etc. will be filled in
+    ./cam1/cam1_%Y-%m-%d_%H-%M-%S.mp4                           # Output dir and template string
