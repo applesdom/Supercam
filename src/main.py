@@ -5,8 +5,13 @@ import time
 
 from capture import *
 from device import *
+from log import *
 
 def main():
+    set_up_logging()
+
+    logging.info('Supercam has begun.')
+
     device_list = poll_video_devices()
     # print('Found %d devices:')
     # for device in device_list:
