@@ -46,14 +46,11 @@ class Capture:
                 line = process.stdout.readline()
             logging.info('ffmpeg child process (pid=%d) has ended' % (process.pid))
 
-        video_args = ['-f', 'v4l2', '-thread_queue_size', '1024', '-input_format', self.video_format, '-s', self.video_size, '-i', self.video_device]
-        if self.video_overlay:
-            overlay_args = ['-vf', 'drawtext=\"fontfile=FreeSans.ttf:fontsize=12:fontcolor=white:x=2:y=2:shadowcolor=black:shadowx=1:shadowy=1:text=\'' + self.video_overlay_template + '\'\"',]
-        else:
-            overlay_args = []
-        format_args = ['-pix_fmt', 'yuv420p', '-c:v', 'h264_v4l2m2m', '-flags', '+global_header', '-b:v', self.video_bitrate, '-y', '-hide_banner']
-        output_args = ['-f', 'segment', '-segment_format_options', 'movflags=+faststart', '-segment_time', self.output_segment_length, '-segment_atclocktime', '1', '-reset_timestamps', '1', '-strftime', '1', self.output_dir + self.output_template]
-        cmd = ['ffmpeg'] + video_args + overlay_args + format_args + output_args
+        cmd = ['ffmpeg', '-y', '-hide_banner']
+        cmd += ['-f', 'v4l2', '-input_format', self.video_format, '-s', self.video_size, '-i', self.video_device]
+        #cmd += ['-vf', 'drawtext=\"fontfile=FreeSans.ttf:fontsize=12:fontcolor=white:x=2:y=2:shadowcolor=black:shadowx=1:shadowy=1:text=\'' + self.video_overlay_template + '\'\"',]
+        #cmd += ['-pix_fmt', 'yuv420p', '-b:v', self.video_bitrate]
+        cmd += ['-f', 'segment', '-segment_time', self.output_segment_length, '-segment_atclocktime', '1', '-reset_timestamps', '1', '-strftime', '1', self.output_dir + self.output_template]
 
         logging.debug('Executing command:')
         logging.debug(' '.join(cmd))
