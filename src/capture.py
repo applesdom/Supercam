@@ -1,3 +1,4 @@
+import logging
 import os
 import threading
 
@@ -31,20 +32,19 @@ class Capture:
     def start(self):
         # Create output dir, if needed
         output_dir_absolute = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.output_dir)
-        print(output_dir_absolute)
         if not os.path.exists(self.output_dir):
-            print('Creating output directory: %s' % (self.output_dir))
+            logging.info('Creating output directory: %s' % (self.output_dir))
             os.makedirs(self.output_dir, exist_ok=True)
 
         # Prepare callback
         def monitor_process(process):
-            print('Started ffmpeg child process (pid=%d)' % (process.pid))
+            logging.info('Started ffmpeg child process (pid=%d)' % (process.pid))
             line = process.stdout.readline()
             while len(line) > 0:
                 for subline in line[:-1].decode('utf-8').split('\r'):
-                    print(subline)
+                    logging.debug(subline)
                 line = process.stdout.readline()
-            print('ffmpeg child process (pid=%d) has ended' % (process.pid))
+            logging.info('ffmpeg child process (pid=%d) has ended' % (process.pid))
 
         video_args = ['-f', 'v4l2', '-thread_queue_size', '1024', '-input_format', self.video_format, '-s', self.video_size, '-i', self.video_device]
         if self.video_overlay:
@@ -55,8 +55,8 @@ class Capture:
         output_args = ['-f', 'segment', '-segment_format_options', 'movflags=+faststart', '-segment_time', self.output_segment_length, '-segment_atclocktime', '1', '-reset_timestamps', '1', '-strftime', '1', self.output_dir + self.output_template]
         cmd = ['ffmpeg'] + video_args + overlay_args + format_args + output_args
 
-        print('Executing command:')
-        print(' '.join(cmd))
+        logging.debug('Executing command:')
+        logging.debug(' '.join(cmd))
     
         self.child = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
