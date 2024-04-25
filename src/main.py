@@ -16,7 +16,7 @@ def main():
     if len(device_list) == 0:
         logging.info('No devices found.')
     else:
-        logging.info('Found %d devices:')
+        logging.info('Found %d devices:' % (len(device_list)))
         for device in device_list:
             logging.info('\t' + str(device))
 
