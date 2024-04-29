@@ -51,6 +51,7 @@ class Capture:
     
         # Execute ffmpeg command
         self.child = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        self.status = Capture.RUNNING
         logging.info('Started ffmpeg child process (pid=%d)' % (self.child.pid))
 
         # Monitor ffmpeg child process
@@ -62,6 +63,7 @@ class Capture:
             for subline in line[:-1].decode('utf-8').split('\r'):
                 logging.debug('[ffmpeg] ' + subline)
 
+        self.status = Capture.STOPPED
         logging.info('ffmpeg child process (pid=%d) has ended' % (self.child.pid))
 
     # Execute __run() in a new thread, then return

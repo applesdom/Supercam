@@ -23,11 +23,19 @@ def main():
     # 5 second video capture test
     capture = Capture()
     capture.video_device = '/dev/video0'
-    logging.info('Starting video capture...')
+    logging.info('Capture state: %d' % (capture.status))
+    logging.info('Starting video capture')
     capture.start()
+    logging.info('waiting for 1 second')
+    time.sleep(1)
+    logging.info('Capture state: %d' % (capture.status))
+    logging.info('waiting for 5 seconds')
     time.sleep(5)
+    logging.info('Stopping video capture')
     capture.stop()
-    logging.info('Ended video capture')
+    logging.info('Waiting for 2 seconds')
+    time.sleep(2)
+    logging.info('Capture state: %d' % (capture.status))
 
 if __name__ == '__main__':
     main()
