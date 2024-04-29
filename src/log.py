@@ -4,7 +4,7 @@ import os
 LOG_FILE  = './supercam.log'
 LOG_LEVEL = logging.DEBUG
 
-def set_up_logging():
+def set_up_logging(level=LOG_LEVEL):
     # Resolve absolute path of log file
     log_file = os.path.abspath(os.path.join(os.path.dirname(__file__), LOG_FILE))
 
@@ -17,6 +17,6 @@ def set_up_logging():
 
     # Apply to root logger
     logger = logging.getLogger()
-    logger.setLevel(LOG_LEVEL)  
+    logger.setLevel(level)  
     logger.addHandler(print_handler)
     logger.addHandler(file_handler)
