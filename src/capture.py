@@ -31,19 +31,20 @@ class Capture:
 
     # Don't call directly, use start()
     def __run(self):
-        # Create output dir, if needed
-        output_dir_absolute = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.output_dir)
+        # Resolve output directory and template
+        output_dir_absolute = os.path.abspath(os.path.join(os.path.dirname(__file__), self.output_dir))
         if not os.path.exists(self.output_dir):
             logging.info('Creating output directory: %s' % (self.output_dir))
             os.makedirs(self.output_dir, exist_ok=True)
             # TODO: Check for error
+        output_template_absolute = os.path.join(output_dir_absolute, self.output_template)
 
         # Build ffmpeg command
         cmd = ['ffmpeg', '-y', '-hide_banner']
         cmd += ['-f', 'v4l2', '-input_format', self.video_format, '-s', self.video_size, '-i', self.video_device]
         #cmd += ['-vf', 'drawtext=\"fontfile=FreeSans.ttf:fontsize=12:fontcolor=white:x=2:y=2:shadowcolor=black:shadowx=1:shadowy=1:text=\'' + self.video_overlay_template + '\'\"',]
         #cmd += ['-pix_fmt', 'yuv420p', '-b:v', self.video_bitrate]
-        cmd += ['-f', 'segment', '-segment_time', self.output_segment_length, '-segment_atclocktime', '1', '-reset_timestamps', '1', '-strftime', '1', self.output_dir + self.output_template]
+        cmd += ['-f', 'segment', '-segment_time', self.output_segment_length, '-segment_atclocktime', '1', '-reset_timestamps', '1', '-strftime', '1', output_template_absolute]
 
         # Print full command for debugging purposes
         logging.debug('Executing command:')
